@@ -255,7 +255,7 @@
       <h1>會員申請</h1>
       <p class="lead" id="leadText">
         🎉 歡迎加入 MAARU SHOP 會員！<br /><br />
-        請填寫社群名稱後送出，開啟官方 LINE 完成申請。
+        請填寫社群名稱後送出。此名稱會寫入後台「顧客姓名」，不可與其他會員重複。
       </p>
 
       <form class="apply-form" id="applyForm" novalidate>
@@ -286,8 +286,13 @@
         var leadText = document.getElementById("leadText");
         var lineBasicId = "";
 
-        function getJson(action) {
+        function getJson(action, extraParams) {
           var url = API_URL + "?action=" + encodeURIComponent(action);
+          if (extraParams) {
+            Object.keys(extraParams).forEach(function (k) {
+              url += "&" + encodeURIComponent(k) + "=" + encodeURIComponent(extraParams[k]);
+            });
+          }
           function doFetch(u) {
             return fetch(u, { method: "GET", redirect: "follow", cache: "no-store" }).then(function (r) {
               return r.text().then(function (t) {
@@ -335,16 +340,27 @@
               if (communityNameEl) communityNameEl.focus();
               return;
             }
-            var url = buildApplyUrl(name);
-            if (!url) {
-              showError("目前無法開啟官方 LINE，請稍後再試或聯絡店家。");
-              return;
-            }
             if (btnSubmit) btnSubmit.disabled = true;
-            window.location.href = url;
-            setTimeout(function () {
-              if (btnSubmit) btnSubmit.disabled = false;
-            }, 1500);
+            getJson("line_bind_name_check", { communityName: name })
+              .then(function (res) {
+                if (res && res.available === false) {
+                  showError((res && res.message) || "此社群名稱已被使用，請更換後再申請");
+                  if (communityNameEl) communityNameEl.focus();
+                  return;
+                }
+                var url = buildApplyUrl(name);
+                if (!url) {
+                  showError("目前無法開啟官方 LINE，請稍後再試或聯絡店家。");
+                  return;
+                }
+                window.location.href = url;
+              })
+              .catch(function () {
+                showError("無法檢查社群名稱，請稍後再試");
+              })
+              .finally(function () {
+                if (btnSubmit) btnSubmit.disabled = false;
+              });
           });
         }
 
