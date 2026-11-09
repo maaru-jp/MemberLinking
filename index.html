@@ -113,42 +113,12 @@
         animation: rise-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.38s forwards;
       }
 
-      .keyword {
-        margin-top: 1.75rem;
-        padding: 1.15rem 1rem 1.25rem;
-        border: 1px solid var(--stroke);
-        background:
-          linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(238, 243, 248, 0.55));
-        backdrop-filter: blur(8px);
-        opacity: 0;
-        animation: rise-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.48s forwards;
-      }
-
-      .keyword-label {
-        display: block;
-        font-size: 0.68rem;
-        letter-spacing: 0.28em;
-        color: var(--ai);
-        font-weight: 500;
-      }
-
-      .keyword-text {
-        margin-top: 0.55rem;
-        font-family: "Shippori Mincho", serif;
-        font-size: clamp(1.7rem, 7vw, 2.05rem);
-        font-weight: 700;
-        letter-spacing: 0.28em;
-        color: var(--sumi);
-        text-align: center;
-        animation: soft-pulse 3.6s ease-in-out 1.2s infinite;
-      }
-
       .actions {
-        margin-top: 1.35rem;
+        margin-top: 1.75rem;
         display: grid;
         gap: 0.75rem;
         opacity: 0;
-        animation: rise-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.58s forwards;
+        animation: rise-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.48s forwards;
       }
 
       .btn-line {
@@ -230,11 +200,6 @@
         to { opacity: 1; transform: scaleX(1); }
       }
 
-      @keyframes soft-pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.72; }
-      }
-
       @keyframes drift {
         from { transform: translate(0, 0); }
         to { transform: translate(-1.5rem, 1.2rem); }
@@ -258,13 +223,8 @@
       <div class="rule" aria-hidden="true"></div>
       <h1>會員申請</h1>
       <p class="lead">
-        請於官方 LINE 傳送「申請會員」。系統會先連結您的 LINE，並進入審核。
+        請開啟官方 LINE 完成會員申請，系統會連結您的 LINE 並進入審核。
       </p>
-
-      <div class="keyword" role="group" aria-label="申請關鍵字">
-        <span class="keyword-label">官方帳號對話輸入</span>
-        <div class="keyword-text">申請會員</div>
-      </div>
 
       <div class="actions">
         <a id="btnOpenLine" class="btn-line" href="https://line.me/R/ti/p/">開啟官方 LINE</a>
