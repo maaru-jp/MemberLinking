@@ -225,12 +225,14 @@
   <body>
     <div class="mist-orb" aria-hidden="true"></div>
     <main class="stage">
-      <div class="brand" id="brandTitle">MAARU</div>
-      <div class="brand-kana" id="brandTag">メンバー申請</div>
+      <div class="brand" id="brandTitle">MAARU SHOP</div>
+      <div class="brand-kana" id="brandTag">会員カード</div>
       <div class="rule" aria-hidden="true"></div>
       <h1>會員申請</h1>
       <p class="lead" id="leadText">
-        點下方「申請會員」，開啟官方 LINE 後按下傳送，即可收到申請已送出。
+        🎉 歡迎加入 MAARU SHOP 會員！<br /><br />
+        請點選下方 「申請會員」 按鈕，開啟官方 LINE 後，即可完成會員申請<br /><br />
+        送出後系統將自動通知您申請已成功送出，謝謝！
       </p>
 
       <div class="actions">
@@ -238,7 +240,6 @@
         <a id="btnShop" class="btn-shop" href="./">返回商店</a>
       </div>
 
-      <p class="foot-note" id="footNote">開啟對話後請按一次傳送，官方帳號會回覆 Flex 確認卡。</p>
     </main>
 
     <script>
@@ -251,7 +252,6 @@
         var btnShop = document.getElementById("btnShop");
         var btnApply = document.getElementById("btnApply");
         var leadText = document.getElementById("leadText");
-        var footNote = document.getElementById("footNote");
 
         function getJson(action) {
           var url = API_URL + "?action=" + encodeURIComponent(action);
@@ -285,20 +285,15 @@
           if (leadText) {
             leadText.textContent = "目前無法開啟官方 LINE，請稍後再試或聯絡店家。";
           }
-          if (footNote) {
-            footNote.textContent = "請確認 GAS 已部署，且官方帳號 Channel access token 已設定。";
-          }
         }
 
         getJson("line_bind_config")
           .then(function (cfg) {
-            var brandName = String((cfg && cfg.brandName) || "MAARU").trim() || "MAARU";
             var publicSiteUrl = String((cfg && cfg.publicSiteUrl) || "").trim();
             var applyMemberUrl = String((cfg && cfg.applyMemberUrl) || "").trim();
-            var shortBrand = brandName.split(/\s+/)[0] || "MAARU";
-            if (brandTitle) brandTitle.textContent = shortBrand;
-            if (brandTag) brandTag.textContent = "メンバー申請";
-            document.title = "會員申請｜" + shortBrand;
+            if (brandTitle) brandTitle.textContent = "MAARU SHOP";
+            if (brandTag) brandTag.textContent = "会員カード";
+            document.title = "會員申請｜MAARU SHOP";
             if (btnShop) {
               btnShop.href = publicSiteUrl ? publicSiteUrl.replace(/\/$/, "") + "/" : "./";
             }
