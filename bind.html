@@ -223,30 +223,6 @@
         font-size: 0.9rem;
         line-height: 1.55;
       }
-      details.old-card {
-        margin-top: 0.85rem;
-        border-radius: 0.9rem;
-        border: 1px dashed rgba(107, 117, 110, 0.35);
-        background: rgba(246, 241, 232, 0.55);
-        padding: 0.55rem 0.75rem;
-      }
-      details.old-card summary {
-        cursor: pointer;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--bind-muted);
-      }
-      details.old-card input {
-        width: 100%;
-        margin-top: 0.45rem;
-        border-radius: 0.7rem;
-        border: 1px solid #d5d0c7;
-        padding: 0.65rem 0.75rem;
-        font-family: ui-monospace, monospace;
-        letter-spacing: 0.08em;
-        font-size: 0.9rem;
-        background: #fff;
-      }
       .foot-link {
         display: block;
         margin-top: 1.1rem;
@@ -280,20 +256,7 @@
         </div>
 
         <div class="bind-card-body">
-          <div id="cardSection" style="display:none;">
-            <details class="old-card">
-              <summary>我已有會員卡號（舊客）</summary>
-              <input
-                id="memberCardInput"
-                type="text"
-                inputmode="numeric"
-                maxlength="13"
-                placeholder="13 碼既有卡號"
-              />
-            </details>
-          </div>
-
-          <div style="margin-top:0.95rem;">
+          <div style="margin-top:0.15rem;">
             <button id="btnLineLogin" class="btn-line" type="button">使用 LINE 登入並取得驗證碼</button>
           </div>
 
@@ -336,11 +299,8 @@
 
         var statusBox = document.getElementById("statusBox");
         var btnLineLogin = document.getElementById("btnLineLogin");
-        var cardSection = document.getElementById("cardSection");
-        var memberCardInput = document.getElementById("memberCardInput");
         var otpPanel = document.getElementById("otpPanel");
         var otpCodeEl = document.getElementById("otpCode");
-        var otpCardHint = document.getElementById("otpCardHint");
         var btnCopyOtp = document.getElementById("btnCopyOtp");
         var reviewPanel = document.getElementById("reviewPanel");
         var reviewText = document.getElementById("reviewText");
@@ -387,18 +347,6 @@
           otpPanel.classList.remove("show");
           reviewPanel.classList.remove("show");
           donePanel.classList.remove("show");
-        }
-
-        function qs(name) {
-          try {
-            return new URLSearchParams(window.location.search).get(name) || "";
-          } catch (e) {
-            return "";
-          }
-        }
-
-        function normalizeCard(v) {
-          return String(v || "").replace(/\D/g, "").slice(0, 13);
         }
 
         function postJson(body) {
@@ -461,7 +409,7 @@
             "您的註冊資料已送出，正在等待 <strong>" +
             (brandName || "商家") +
             "</strong> 審核。<br />審核結果將透過 LINE 通知您，請耐心等候。";
-          reviewCardHint.textContent = state.memberCardNo ? ("會員卡號：" + state.memberCardNo) : "";
+          reviewCardHint.textContent = "";
           setStatus("綁定成功，等待商家審核。");
         }
 
@@ -470,10 +418,7 @@
           hidePanels();
           donePanel.classList.add("show");
           setSteps(3);
-          donePanel.textContent =
-            "審核已通過" +
-            (state.memberCardNo ? "（卡號 " + state.memberCardNo + "）" : "") +
-            "，可直接返回商店使用。";
+          donePanel.textContent = "審核已通過，可直接返回商店使用。";
           setStatus("審核已通過。");
         }
 
@@ -483,7 +428,7 @@
           return postJson({
             action: "line_bind_member_status",
             lineAccessToken: state.accessToken || "",
-            memberCardNo: state.memberCardNo || normalizeCard(memberCardInput.value || qs("card"))
+            memberCardNo: state.memberCardNo || ""
           })
             .then(function (data) {
               if (!data || data.error) throw new Error((data && data.message) || "無法取得狀態");
@@ -525,16 +470,20 @@
           }
         }
 
+        /** LINE 登入後呼叫後端，由伺服器隨機產生 6 碼並顯示 */
         function requestOtp(accessToken, displayName) {
-          var card = normalizeCard(memberCardInput.value || qs("card"));
+          if (!accessToken) {
+            setStatus("請先完成 LINE 登入，系統才會自動產生 6 碼驗證碼。", true);
+            return Promise.resolve();
+          }
           btnLineLogin.disabled = true;
-          setStatus("正在產生驗證碼…");
+          setStatus("正在自動產生驗證碼…");
           return postJson({
             action: "line_bind_otp_create",
-            memberCardNo: card,
-            lineAccessToken: accessToken || "",
+            memberCardNo: "",
+            lineAccessToken: accessToken,
             displayName: displayName || "",
-            createIfMissing: !card
+            createIfMissing: true
           })
             .then(function (data) {
               if (data && data.alreadyBound) {
@@ -545,8 +494,7 @@
               if (!data || data.error || !data.otp) {
                 throw new Error((data && data.message) || "無法產生驗證碼");
               }
-              if (data.memberCardNo && memberCardInput) memberCardInput.value = data.memberCardNo;
-              showOtp(data.otp, data.memberCardNo || card);
+              showOtp(data.otp, data.memberCardNo || "");
             })
             .catch(function (err) {
               setStatus((err && err.message) || "產生驗證碼失敗", true);
@@ -556,19 +504,29 @@
             });
         }
 
+        function fetchOtpAfterLogin_() {
+          var token = "";
+          try {
+            token = liff.getAccessToken() || "";
+          } catch (e) {}
+          state.accessToken = token;
+          return liff
+            .getProfile()
+            .then(function (p) {
+              return requestOtp(token, (p && p.displayName) || "");
+            })
+            .catch(function () {
+              return requestOtp(token, "");
+            })
+            .then(function () {
+              return refreshMemberStatus();
+            });
+        }
+
         function runWithLiff() {
           if (!state.liffId || !window.liff) {
-            cardSection.style.display = "block";
-            setStatus("尚未設定 LIFF。可先填既有卡號，或請店家完成 LINE LIFF 設定。", true);
-            btnLineLogin.textContent = "取得驗證碼";
-            btnLineLogin.onclick = function () {
-              var card = normalizeCard(memberCardInput.value || qs("card"));
-              if (card.length !== 13) {
-                setStatus("請先輸入 13 碼會員卡號（或請店家設定 LIFF）", true);
-                return;
-              }
-              requestOtp("", "");
-            };
+            setStatus("尚未設定 LIFF。請店家在 Code.gs 填入 lineLiffId 後重新部署。", true);
+            btnLineLogin.disabled = true;
             return;
           }
 
@@ -577,65 +535,34 @@
             .init({ liffId: state.liffId })
             .then(function () {
               state.liffReady = true;
-              cardSection.style.display = "block";
               if (!liff.isLoggedIn()) {
                 setSteps(1);
-                setStatus("請點下方按鈕以 LINE 登入。");
+                setStatus("請點下方按鈕以 LINE 登入，系統會自動產生 6 碼。");
                 btnLineLogin.onclick = function () {
                   liff.login({ redirectUri: window.location.href });
                 };
                 return;
               }
-              setStatus("LINE 已登入，可取得驗證碼。");
-              btnLineLogin.textContent = "取得／重新產生驗證碼";
+              setStatus("LINE 已登入，正在自動產生驗證碼…");
+              btnLineLogin.textContent = "重新產生驗證碼";
               btnLineLogin.onclick = function () {
-                var token = "";
-                try {
-                  token = liff.getAccessToken() || "";
-                } catch (e) {}
-                state.accessToken = token;
-                liff
-                  .getProfile()
-                  .then(function (p) {
-                    return requestOtp(token, (p && p.displayName) || "").then(function () {
-                      return refreshMemberStatus();
-                    });
-                  })
-                  .catch(function () {
-                    return requestOtp(token, "").then(function () {
-                      return refreshMemberStatus();
-                    });
-                  });
+                fetchOtpAfterLogin_();
               };
+              // 已登入：先查狀態；若尚未綁定則自動產生 6 碼
               refreshMemberStatus().then(function () {
                 if (!reviewPanel.classList.contains("show") && !donePanel.classList.contains("show")) {
-                  btnLineLogin.click();
+                  fetchOtpAfterLogin_();
                 }
               });
             })
             .catch(function (err) {
-              cardSection.style.display = "block";
               setStatus("LINE 登入初始化失敗：" + ((err && err.message) || err), true);
-              btnLineLogin.textContent = "以卡號取得驗證碼";
-              btnLineLogin.onclick = function () {
-                var card = normalizeCard(memberCardInput.value || qs("card"));
-                if (card.length !== 13) {
-                  setStatus("請輸入 13 碼會員卡號", true);
-                  return;
-                }
-                requestOtp("", "");
-              };
+              btnLineLogin.disabled = true;
             });
         }
 
         btnCopyOtp.addEventListener("click", copyOtp);
         btnRefreshStatus.addEventListener("click", refreshMemberStatus);
-
-        var prefill = normalizeCard(qs("card"));
-        if (prefill) {
-          memberCardInput.value = prefill;
-          state.memberCardNo = prefill;
-        }
 
         setSteps(1);
         getJson("line_bind_config")
@@ -655,17 +582,8 @@
             runWithLiff();
           })
           .catch(function () {
-            cardSection.style.display = "block";
-            setStatus("無法讀取綁定設定，仍可輸入卡號取得驗證碼。", true);
-            btnLineLogin.textContent = "以卡號取得驗證碼";
-            btnLineLogin.onclick = function () {
-              var card = normalizeCard(memberCardInput.value || qs("card"));
-              if (card.length !== 13) {
-                setStatus("請輸入 13 碼會員卡號", true);
-                return;
-              }
-              requestOtp("", "");
-            };
+            setStatus("無法讀取綁定設定，請確認 GAS 已部署。", true);
+            btnLineLogin.disabled = true;
           });
       })();
     </script>
