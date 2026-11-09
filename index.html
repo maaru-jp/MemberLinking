@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>會員申請｜MAARU</title>
+    <title>會員申請｜MAARU SHOP</title>
     <script>
       (function () {
         var p = window.location.pathname || "";
@@ -23,11 +23,11 @@
         --muted: #6a7585;
         --ai: #3d5a80;
         --ai-deep: #2c4466;
-        --mist: #eef3f8;
         --washi: #f7f9fc;
         --line: #06c755;
         --line-deep: #05a848;
         --stroke: rgba(61, 90, 128, 0.16);
+        --err: #b42318;
       }
 
       * { box-sizing: border-box; }
@@ -60,10 +60,10 @@
 
       .brand {
         font-family: "Shippori Mincho", serif;
-        font-size: clamp(3.1rem, 12vw, 4.2rem);
+        font-size: clamp(2.6rem, 10vw, 3.6rem);
         font-weight: 700;
         line-height: 0.95;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.06em;
         color: var(--sumi);
         opacity: 0;
         transform: translateY(14px);
@@ -104,21 +104,62 @@
 
       .lead {
         margin: 0.7rem 0 0;
-        max-width: 20rem;
-        font-size: 0.92rem;
+        font-size: 0.9rem;
         line-height: 1.75;
         color: var(--muted);
-        font-weight: 400;
         opacity: 0;
         animation: rise-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.38s forwards;
       }
 
-      .actions {
-        margin-top: 1.75rem;
+      .apply-form {
+        margin-top: 1.5rem;
         display: grid;
-        gap: 0.75rem;
+        gap: 0.95rem;
         opacity: 0;
         animation: rise-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.48s forwards;
+      }
+
+      .field label {
+        display: block;
+        margin-bottom: 0.4rem;
+        font-size: 0.72rem;
+        letter-spacing: 0.18em;
+        color: var(--ai);
+        font-weight: 500;
+      }
+
+      .field input {
+        width: 100%;
+        min-height: 2.9rem;
+        padding: 0.7rem 0.85rem;
+        border: 1px solid var(--stroke);
+        background: rgba(255, 255, 255, 0.78);
+        color: var(--sumi);
+        font-family: inherit;
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.2s ease, background 0.2s ease;
+      }
+
+      .field input:focus {
+        border-color: rgba(61, 90, 128, 0.45);
+        background: #fff;
+      }
+
+      .form-error {
+        display: none;
+        margin: 0;
+        font-size: 0.78rem;
+        color: var(--err);
+        line-height: 1.5;
+      }
+
+      .form-error.show { display: block; }
+
+      .actions {
+        margin-top: 0.35rem;
+        display: grid;
+        gap: 0.75rem;
       }
 
       .btn-line {
@@ -145,10 +186,9 @@
         transform: translateY(-1px);
       }
 
-      .btn-line:disabled,
-      .btn-line.is-disabled {
+      .btn-line:disabled {
         opacity: 0.55;
-        pointer-events: none;
+        cursor: not-allowed;
         transform: none;
       }
 
@@ -164,22 +204,6 @@
         text-decoration: none;
         font-size: 0.86rem;
         letter-spacing: 0.12em;
-        transition: border-color 0.2s ease, color 0.2s ease;
-      }
-
-      .btn-shop:hover {
-        border-color: rgba(61, 90, 128, 0.4);
-        color: var(--ai-deep);
-      }
-
-      .foot-note {
-        margin-top: 1.6rem;
-        font-size: 0.72rem;
-        letter-spacing: 0.08em;
-        color: var(--muted);
-        line-height: 1.7;
-        opacity: 0;
-        animation: rise-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.7s forwards;
       }
 
       .mist-orb {
@@ -231,15 +255,24 @@
       <h1>會員申請</h1>
       <p class="lead" id="leadText">
         🎉 歡迎加入 MAARU SHOP 會員！<br /><br />
-        請點選下方 「申請會員」 按鈕，開啟官方 LINE 後，即可完成會員申請<br /><br />
-        送出後系統將自動通知您申請已成功送出，謝謝！
+        請填寫客戶姓名（社群名稱）與取貨門市後送出，開啟官方 LINE 完成申請。
       </p>
 
-      <div class="actions">
-        <a id="btnApply" class="btn-line is-disabled" href="#" aria-disabled="true">申請會員</a>
-        <a id="btnShop" class="btn-shop" href="./">返回商店</a>
-      </div>
-
+      <form class="apply-form" id="applyForm" novalidate>
+        <div class="field">
+          <label for="communityName">客戶姓名（社群名稱）</label>
+          <input id="communityName" name="communityName" type="text" maxlength="40" autocomplete="name" placeholder="請輸入客戶姓名／社群名稱" required />
+        </div>
+        <div class="field">
+          <label for="pickupStore">取貨門市</label>
+          <input id="pickupStore" name="pickupStore" type="text" maxlength="60" placeholder="請輸入常用取貨門市" required />
+        </div>
+        <p class="form-error" id="formError" role="alert"></p>
+        <div class="actions">
+          <button class="btn-line" id="btnSubmit" type="submit">送出申請</button>
+          <a id="btnShop" class="btn-shop" href="./">返回商店</a>
+        </div>
+      </form>
     </main>
 
     <script>
@@ -250,8 +283,13 @@
         var brandTitle = document.getElementById("brandTitle");
         var brandTag = document.getElementById("brandTag");
         var btnShop = document.getElementById("btnShop");
-        var btnApply = document.getElementById("btnApply");
+        var applyForm = document.getElementById("applyForm");
+        var communityNameEl = document.getElementById("communityName");
+        var pickupStoreEl = document.getElementById("pickupStore");
+        var formError = document.getElementById("formError");
+        var btnSubmit = document.getElementById("btnSubmit");
         var leadText = document.getElementById("leadText");
+        var lineBasicId = "";
 
         function getJson(action) {
           var url = API_URL + "?action=" + encodeURIComponent(action);
@@ -271,36 +309,72 @@
           });
         }
 
-        function setApplyUrl(url) {
-          if (!btnApply) return;
-          if (url && /^https:\/\//i.test(url)) {
-            btnApply.href = url;
-            btnApply.classList.remove("is-disabled");
-            btnApply.removeAttribute("aria-disabled");
+        function showError(msg) {
+          if (!formError) return;
+          if (!msg) {
+            formError.textContent = "";
+            formError.classList.remove("show");
             return;
           }
-          btnApply.href = "#";
-          btnApply.classList.add("is-disabled");
-          btnApply.setAttribute("aria-disabled", "true");
-          if (leadText) {
-            leadText.textContent = "目前無法開啟官方 LINE，請稍後再試或聯絡店家。";
-          }
+          formError.textContent = msg;
+          formError.classList.add("show");
+        }
+
+        function buildApplyText(name, store) {
+          return "申請會員\n客戶姓名：" + name + "\n取貨門市：" + store;
+        }
+
+        function buildApplyUrl(name, store) {
+          if (!lineBasicId) return "";
+          var basicId = lineBasicId.charAt(0) === "@" ? lineBasicId : "@" + lineBasicId.replace(/^@+/, "");
+          return "https://line.me/R/oaMessage/" + basicId + "/?text=" + encodeURIComponent(buildApplyText(name, store));
+        }
+
+        if (applyForm) {
+          applyForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            showError("");
+            var name = String((communityNameEl && communityNameEl.value) || "").trim();
+            var store = String((pickupStoreEl && pickupStoreEl.value) || "").trim();
+            if (!name) {
+              showError("請填寫客戶姓名（社群名稱）");
+              if (communityNameEl) communityNameEl.focus();
+              return;
+            }
+            if (!store) {
+              showError("請填寫取貨門市");
+              if (pickupStoreEl) pickupStoreEl.focus();
+              return;
+            }
+            var url = buildApplyUrl(name, store);
+            if (!url) {
+              showError("目前無法開啟官方 LINE，請稍後再試或聯絡店家。");
+              return;
+            }
+            if (btnSubmit) btnSubmit.disabled = true;
+            window.location.href = url;
+            setTimeout(function () {
+              if (btnSubmit) btnSubmit.disabled = false;
+            }, 1500);
+          });
         }
 
         getJson("line_bind_config")
           .then(function (cfg) {
             var publicSiteUrl = String((cfg && cfg.publicSiteUrl) || "").trim();
-            var applyMemberUrl = String((cfg && cfg.applyMemberUrl) || "").trim();
+            lineBasicId = String((cfg && cfg.lineBasicId) || "").trim();
             if (brandTitle) brandTitle.textContent = "MAARU SHOP";
             if (brandTag) brandTag.textContent = "会員カード";
             document.title = "會員申請｜MAARU SHOP";
             if (btnShop) {
               btnShop.href = publicSiteUrl ? publicSiteUrl.replace(/\/$/, "") + "/" : "./";
             }
-            setApplyUrl(applyMemberUrl);
+            if (!lineBasicId && leadText) {
+              leadText.textContent = "目前無法連線官方 LINE，請稍後再試或聯絡店家。";
+            }
           })
           .catch(function () {
-            setApplyUrl("");
+            if (leadText) leadText.textContent = "目前無法連線官方 LINE，請稍後再試或聯絡店家。";
           });
       })();
     </script>
