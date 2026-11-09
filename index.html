@@ -271,7 +271,6 @@
         <p class="form-error" id="formError" role="alert"></p>
         <div class="actions">
           <button class="btn-line" id="btnSubmit" type="submit">送出申請</button>
-          <a id="btnShop" class="btn-shop" href="./">返回商店</a>
         </div>
       </form>
     </main>
@@ -283,7 +282,6 @@
         var CORS_PROXY_PREFIX = "https://corsproxy.io/?";
         var brandTitle = document.getElementById("brandTitle");
         var brandTag = document.getElementById("brandTag");
-        var btnShop = document.getElementById("btnShop");
         var applyForm = document.getElementById("applyForm");
         var communityNameEl = document.getElementById("communityName");
         var formError = document.getElementById("formError");
@@ -371,14 +369,10 @@
 
         getJson("line_bind_config")
           .then(function (cfg) {
-            var publicSiteUrl = String((cfg && cfg.publicSiteUrl) || "").trim();
             lineBasicId = String((cfg && cfg.lineBasicId) || "").trim();
             if (brandTitle) brandTitle.textContent = "MAARU SHOP";
             if (brandTag) brandTag.textContent = "会員カード";
             document.title = "會員申請｜MAARU SHOP";
-            if (btnShop) {
-              btnShop.href = publicSiteUrl ? publicSiteUrl.replace(/\/$/, "") + "/" : "./";
-            }
             if (!lineBasicId && leadText) {
               leadText.textContent = "目前無法連線官方 LINE，請稍後再試或聯絡店家。";
             }
