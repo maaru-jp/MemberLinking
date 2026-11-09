@@ -1,0 +1,15 @@
+【MemberLinking — GitHub Pages 上架】
+
+1. 在 GitHub 新建倉庫，名稱建議：MemberLinking（Public）
+2. 上傳本資料夾內：
+   - index.html   （首頁）
+   - bind.html    （綁定頁，與 index 相同內容）
+3. 倉庫 Settings → Pages → Source 選 Deploy from a branch → main / root
+4. 上線網址範例：
+   https://（你的帳號）.github.io/MemberLinking/
+   https://（你的帳號）.github.io/MemberLinking/bind.html
+5. LINE Developers → LIFF → Endpoint URL 填上述 bind.html 網址
+6. 在 GAS Code.gs 的 CONFIG 填入：
+   publicSiteUrl: "https://（你的帳號）.github.io/MemberLinking"
+   lineBindPageUrl: "https://（你的帳號）.github.io/MemberLinking/bind.html"
+   lineLiffId: "你的 LIFF ID"

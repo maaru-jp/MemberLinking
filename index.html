@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>會員綁定｜MemberLinking</title>
+    <script>
+      (function () {
+        var p = window.location.pathname || "";
+        if (p && !p.endsWith("/") && p.indexOf(".") === -1) {
+          window.location.replace(p + "/" + window.location.search + window.location.hash);
+        }
+      })();
+    </script>
+    <base href="./" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Noto+Sans+TC:wght@400;500;600;700&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+      :root {
+        --bind-ink: #2f3a32;
+        --bind-muted: #6b756e;
+        --bind-line: #06c755;
+        --bind-line-deep: #05a848;
+        --bind-matcha: #7a9e7e;
+        --bind-cream: #f6f1e8;
+        --bind-sand: #ebe3d6;
+        --bind-amber: #d97706;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--bind-ink);
+        font-family: "Noto Sans TC", "Zen Maru Gothic", sans-serif;
+        background:
+          radial-gradient(ellipse 90% 60% at 0% 0%, rgba(122, 158, 126, 0.22), transparent 55%),
+          radial-gradient(ellipse 70% 50% at 100% 10%, rgba(232, 168, 124, 0.18), transparent 50%),
+          linear-gradient(165deg, #f8f5ef 0%, #eef3ee 45%, #f4efe7 100%);
+      }
+      .bind-shell {
+        max-width: 26rem;
+        margin: 0 auto;
+        padding: 2rem 1.1rem 3rem;
+      }
+      .brand-mark {
+        font-family: "Instrument Serif", "Zen Maru Gothic", serif;
+        font-size: 2.35rem;
+        line-height: 1;
+        letter-spacing: 0.02em;
+        color: var(--bind-ink);
+      }
+      .brand-sub {
+        margin-top: 0.35rem;
+        font-size: 0.72rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--bind-matcha);
+        font-weight: 600;
+      }
+      .bind-card {
+        margin-top: 1.5rem;
+        border-radius: 1.75rem;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(122, 158, 126, 0.22);
+        box-shadow: 0 18px 50px rgba(47, 58, 50, 0.06);
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+      }
+      .bind-card-head {
+        padding: 1.35rem 1.35rem 1rem;
+        background:
+          linear-gradient(135deg, rgba(122, 158, 126, 0.16), transparent 60%),
+          linear-gradient(180deg, #fff 0%, rgba(246, 241, 232, 0.65) 100%);
+        border-bottom: 1px solid rgba(122, 158, 126, 0.12);
+      }
+      .bind-card-body { padding: 1.2rem 1.35rem 1.5rem; }
+      .step-row {
+        display: flex;
+        gap: 0.55rem;
+        margin: 0.85rem 0 0;
+      }
+      .step-pill {
+        flex: 1;
+        text-align: center;
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: var(--bind-muted);
+        background: var(--bind-cream);
+        border: 1px solid var(--bind-sand);
+        border-radius: 999px;
+        padding: 0.4rem 0.2rem;
+      }
+      .step-pill.on {
+        color: #fff;
+        background: var(--bind-matcha);
+        border-color: var(--bind-matcha);
+      }
+      .status-chip {
+        display: none;
+        margin-top: 0.9rem;
+        border-radius: 0.9rem;
+        padding: 0.7rem 0.85rem;
+        font-size: 0.82rem;
+        line-height: 1.45;
+        border: 1px solid transparent;
+      }
+      .status-chip.show { display: block; }
+      .status-chip.info {
+        background: #f3f6f3;
+        border-color: #d7e3d8;
+        color: #445248;
+      }
+      .status-chip.err {
+        background: #fff1f2;
+        border-color: #fecdd3;
+        color: #9f1239;
+      }
+      .btn-line {
+        width: 100%;
+        border: 0;
+        border-radius: 999px;
+        background: var(--bind-line);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.95rem;
+        padding: 0.95rem 1rem;
+        cursor: pointer;
+        box-shadow: 0 10px 24px rgba(6, 199, 85, 0.25);
+      }
+      .btn-line:hover { background: var(--bind-line-deep); }
+      .btn-line:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+      .panel {
+        display: none;
+        margin-top: 1rem;
+        border-radius: 1.25rem;
+        padding: 1.15rem 1rem 1.2rem;
+      }
+      .panel.show { display: block; }
+      .panel-otp {
+        background: linear-gradient(180deg, #f0f7f1, #fbfaf7);
+        border: 1px solid rgba(122, 158, 126, 0.28);
+      }
+      .otp-label {
+        text-align: center;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--bind-matcha);
+        letter-spacing: 0.08em;
+      }
+      .otp-digit {
+        margin: 0.55rem 0 0.85rem;
+        text-align: center;
+        font-family: "Zen Maru Gothic", "Noto Sans TC", sans-serif;
+        font-size: 2.6rem;
+        font-weight: 700;
+        letter-spacing: 0.28em;
+        color: var(--bind-ink);
+        font-variant-numeric: tabular-nums;
+      }
+      .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; }
+      .btn-ghost, .btn-deep, .btn-amber {
+        border-radius: 999px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        padding: 0.72rem 0.5rem;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .btn-ghost {
+        border: 1px solid rgba(122, 158, 126, 0.35);
+        background: #fff;
+        color: #3d5642;
+      }
+      .btn-deep {
+        border: 0;
+        background: #1f6b3a;
+        color: #fff;
+      }
+      .btn-amber {
+        width: 100%;
+        border: 0;
+        background: var(--bind-amber);
+        color: #fff;
+        box-shadow: 0 10px 22px rgba(217, 119, 6, 0.22);
+      }
+      .hint {
+        margin: 0.75rem 0 0;
+        font-size: 0.72rem;
+        line-height: 1.55;
+        color: var(--bind-muted);
+        text-align: center;
+      }
+      .panel-review {
+        text-align: center;
+        background: #fffaf3;
+        border: 1px solid #f3dfc0;
+      }
+      .clock-ring {
+        width: 3.5rem;
+        height: 3.5rem;
+        margin: 0.2rem auto 0.85rem;
+        border-radius: 999px;
+        border: 2px solid #f0b45a;
+        display: grid;
+        place-items: center;
+        color: #d97706;
+        font-size: 1.35rem;
+      }
+      .panel-review h2 {
+        margin: 0;
+        font-family: "Zen Maru Gothic", sans-serif;
+        font-size: 1.45rem;
+      }
+      .panel-done {
+        text-align: center;
+        background: #eef7f0;
+        border: 1px solid #cfe3d3;
+        color: #24553a;
+        font-size: 0.9rem;
+        line-height: 1.55;
+      }
+      details.old-card {
+        margin-top: 0.85rem;
+        border-radius: 0.9rem;
+        border: 1px dashed rgba(107, 117, 110, 0.35);
+        background: rgba(246, 241, 232, 0.55);
+        padding: 0.55rem 0.75rem;
+      }
+      details.old-card summary {
+        cursor: pointer;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--bind-muted);
+      }
+      details.old-card input {
+        width: 100%;
+        margin-top: 0.45rem;
+        border-radius: 0.7rem;
+        border: 1px solid #d5d0c7;
+        padding: 0.65rem 0.75rem;
+        font-family: ui-monospace, monospace;
+        letter-spacing: 0.08em;
+        font-size: 0.9rem;
+        background: #fff;
+      }
+      .foot-link {
+        display: block;
+        margin-top: 1.1rem;
+        text-align: center;
+        font-size: 0.82rem;
+        color: var(--bind-muted);
+        text-decoration: none;
+      }
+      .foot-link:hover { color: var(--bind-matcha); }
+    </style>
+  </head>
+  <body>
+    <main class="bind-shell">
+      <header>
+        <div class="brand-mark" id="brandTitle">MemberLinking</div>
+        <div class="brand-sub" id="brandTag">MAARU · 會員綁定</div>
+      </header>
+
+      <section class="bind-card">
+        <div class="bind-card-head">
+          <h1 style="margin:0;font-size:1.35rem;font-weight:700;">連結官方帳號</h1>
+          <p style="margin:0.45rem 0 0;font-size:0.86rem;line-height:1.55;color:var(--bind-muted);">
+            登入後取得 6 碼驗證碼，貼到官方 LINE 即可完成綁定，再由商家審核通過。
+          </p>
+          <div class="step-row" aria-hidden="true">
+            <div class="step-pill on" id="step1">① LINE 登入</div>
+            <div class="step-pill" id="step2">② 貼上 6 碼</div>
+            <div class="step-pill" id="step3">③ 等待審核</div>
+          </div>
+          <div id="statusBox" class="status-chip info" role="status">準備中…</div>
+        </div>
+
+        <div class="bind-card-body">
+          <div id="cardSection" style="display:none;">
+            <details class="old-card">
+              <summary>我已有會員卡號（舊客）</summary>
+              <input
+                id="memberCardInput"
+                type="text"
+                inputmode="numeric"
+                maxlength="13"
+                placeholder="13 碼既有卡號"
+              />
+            </details>
+          </div>
+
+          <div style="margin-top:0.95rem;">
+            <button id="btnLineLogin" class="btn-line" type="button">使用 LINE 登入並取得驗證碼</button>
+          </div>
+
+          <div id="otpPanel" class="panel panel-otp">
+            <div class="otp-label">驗證碼 · 複製後貼到官方 LINE</div>
+            <div id="otpCode" class="otp-digit">------</div>
+            <p id="otpCardHint" class="hint" style="display:none;"></p>
+            <div class="btn-row">
+              <button id="btnCopyOtp" class="btn-ghost" type="button">複製驗證碼</button>
+              <a id="btnOpenLine" class="btn-deep" href="https://line.me/R/oaMessage/@/">開啟官方 LINE</a>
+            </div>
+            <p class="hint">約 10 分鐘內有效。貼上後進入審核，通過會以 LINE 通知。</p>
+          </div>
+
+          <div id="reviewPanel" class="panel panel-review">
+            <div class="clock-ring" aria-hidden="true">⏱</div>
+            <h2>審核中</h2>
+            <p id="reviewText" class="hint" style="margin-top:0.55rem;">
+              您的註冊資料已送出，正在等待商家審核。<br />
+              審核結果將透過 LINE 通知您，請耐心等候。
+            </p>
+            <p id="reviewCardHint" class="hint" style="margin-top:0.25rem;font-family:ui-monospace,monospace;"></p>
+            <button id="btnRefreshStatus" class="btn-amber" type="button" style="margin-top:0.95rem;">重新整理狀態</button>
+          </div>
+
+          <div id="donePanel" class="panel panel-done">
+            審核已通過，可直接返回商店使用。
+          </div>
+
+          <a id="btnShop" class="foot-link" href="./">返回商店</a>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        var API_URL =
+          "https://script.google.com/macros/s/AKfycbyyFnwQVNVamiWRD23U4TOIKnR_iHqfO3ObFmFl_lfqepR8tvFgvWvm5YBqxuFWZiaBfw/exec";
+        var CORS_PROXY_PREFIX = "https://corsproxy.io/?";
+
+        var statusBox = document.getElementById("statusBox");
+        var btnLineLogin = document.getElementById("btnLineLogin");
+        var cardSection = document.getElementById("cardSection");
+        var memberCardInput = document.getElementById("memberCardInput");
+        var otpPanel = document.getElementById("otpPanel");
+        var otpCodeEl = document.getElementById("otpCode");
+        var otpCardHint = document.getElementById("otpCardHint");
+        var btnCopyOtp = document.getElementById("btnCopyOtp");
+        var reviewPanel = document.getElementById("reviewPanel");
+        var reviewText = document.getElementById("reviewText");
+        var reviewCardHint = document.getElementById("reviewCardHint");
+        var btnRefreshStatus = document.getElementById("btnRefreshStatus");
+        var donePanel = document.getElementById("donePanel");
+        var btnShop = document.getElementById("btnShop");
+        var step1 = document.getElementById("step1");
+        var step2 = document.getElementById("step2");
+        var step3 = document.getElementById("step3");
+        var brandTitle = document.getElementById("brandTitle");
+        var brandTag = document.getElementById("brandTag");
+        var brandName = "MAARU";
+        var projectName = "MemberLinking";
+
+        var state = {
+          liffId: "",
+          liffReady: false,
+          publicSiteUrl: "",
+          currentOtp: "",
+          accessToken: "",
+          memberCardNo: ""
+        };
+
+        function setSteps(n) {
+          [step1, step2, step3].forEach(function (el, i) {
+            if (!el) return;
+            if (i < n) el.classList.add("on");
+            else el.classList.remove("on");
+          });
+        }
+
+        function setStatus(msg, isError) {
+          if (!msg) {
+            statusBox.className = "status-chip";
+            statusBox.textContent = "";
+            return;
+          }
+          statusBox.textContent = msg;
+          statusBox.className = "status-chip show " + (isError ? "err" : "info");
+        }
+
+        function hidePanels() {
+          otpPanel.classList.remove("show");
+          reviewPanel.classList.remove("show");
+          donePanel.classList.remove("show");
+        }
+
+        function qs(name) {
+          try {
+            return new URLSearchParams(window.location.search).get(name) || "";
+          } catch (e) {
+            return "";
+          }
+        }
+
+        function normalizeCard(v) {
+          return String(v || "").replace(/\D/g, "").slice(0, 13);
+        }
+
+        function postJson(body) {
+          var payload = JSON.stringify(body || {});
+          function doFetch(url) {
+            return fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "text/plain;charset=utf-8" },
+              body: payload,
+              redirect: "follow"
+            }).then(function (r) {
+              return r.text().then(function (t) {
+                try {
+                  return t ? JSON.parse(t) : {};
+                } catch (e) {
+                  throw new Error("伺服器回應異常");
+                }
+              });
+            });
+          }
+          return doFetch(API_URL).catch(function () {
+            return doFetch(CORS_PROXY_PREFIX + encodeURIComponent(API_URL));
+          });
+        }
+
+        function getJson(action) {
+          var url = API_URL + "?action=" + encodeURIComponent(action);
+          function doFetch(u) {
+            return fetch(u, { method: "GET", redirect: "follow", cache: "no-store" }).then(function (r) {
+              return r.text().then(function (t) {
+                try {
+                  return t ? JSON.parse(t) : {};
+                } catch (e) {
+                  throw new Error("設定讀取失敗");
+                }
+              });
+            });
+          }
+          return doFetch(url).catch(function () {
+            return doFetch(CORS_PROXY_PREFIX + encodeURIComponent(url));
+          });
+        }
+
+        function showOtp(otp, card) {
+          state.currentOtp = String(otp || "");
+          state.memberCardNo = card || state.memberCardNo || "";
+          otpCodeEl.textContent = state.currentOtp;
+          hidePanels();
+          otpPanel.classList.add("show");
+          setSteps(2);
+          setStatus("已產生驗證碼，請複製後貼到官方 LINE。");
+        }
+
+        function showReview(card) {
+          state.memberCardNo = card || state.memberCardNo || "";
+          hidePanels();
+          reviewPanel.classList.add("show");
+          setSteps(3);
+          reviewText.innerHTML =
+            "您的註冊資料已送出，正在等待 <strong>" +
+            (brandName || "商家") +
+            "</strong> 審核。<br />審核結果將透過 LINE 通知您，請耐心等候。";
+          reviewCardHint.textContent = state.memberCardNo ? ("會員卡號：" + state.memberCardNo) : "";
+          setStatus("綁定成功，等待商家審核。");
+        }
+
+        function showApproved(card) {
+          state.memberCardNo = card || state.memberCardNo || "";
+          hidePanels();
+          donePanel.classList.add("show");
+          setSteps(3);
+          donePanel.textContent =
+            "審核已通過" +
+            (state.memberCardNo ? "（卡號 " + state.memberCardNo + "）" : "") +
+            "，可直接返回商店使用。";
+          setStatus("審核已通過。");
+        }
+
+        function refreshMemberStatus() {
+          btnRefreshStatus.disabled = true;
+          setStatus("正在重新整理狀態…");
+          return postJson({
+            action: "line_bind_member_status",
+            lineAccessToken: state.accessToken || "",
+            memberCardNo: state.memberCardNo || normalizeCard(memberCardInput.value || qs("card"))
+          })
+            .then(function (data) {
+              if (!data || data.error) throw new Error((data && data.message) || "無法取得狀態");
+              if (data.pendingReview) {
+                showReview(data.memberCardNo);
+                return;
+              }
+              if (data.approved || data.status === "有效") {
+                showApproved(data.memberCardNo);
+                return;
+              }
+              if (data.bound) {
+                showReview(data.memberCardNo);
+                return;
+              }
+              setStatus(data.message || "尚未完成綁定，請先取得驗證碼並貼到官方 LINE。");
+              reviewPanel.classList.remove("show");
+            })
+            .catch(function (err) {
+              setStatus((err && err.message) || "狀態查詢失敗", true);
+            })
+            .finally(function () {
+              btnRefreshStatus.disabled = false;
+            });
+        }
+
+        function copyOtp() {
+          var text = state.currentOtp || "";
+          if (!text) return;
+          function ok() {
+            setStatus("已複製驗證碼，請到官方 LINE 貼上。");
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(ok).catch(function () {
+              window.prompt("請手動複製驗證碼：", text);
+            });
+          } else {
+            window.prompt("請手動複製驗證碼：", text);
+          }
+        }
+
+        function requestOtp(accessToken, displayName) {
+          var card = normalizeCard(memberCardInput.value || qs("card"));
+          btnLineLogin.disabled = true;
+          setStatus("正在產生驗證碼…");
+          return postJson({
+            action: "line_bind_otp_create",
+            memberCardNo: card,
+            lineAccessToken: accessToken || "",
+            displayName: displayName || "",
+            createIfMissing: !card
+          })
+            .then(function (data) {
+              if (data && data.alreadyBound) {
+                if (data.pendingReview || data.status === "審核中") showReview(data.memberCardNo);
+                else showApproved(data.memberCardNo);
+                return;
+              }
+              if (!data || data.error || !data.otp) {
+                throw new Error((data && data.message) || "無法產生驗證碼");
+              }
+              if (data.memberCardNo && memberCardInput) memberCardInput.value = data.memberCardNo;
+              showOtp(data.otp, data.memberCardNo || card);
+            })
+            .catch(function (err) {
+              setStatus((err && err.message) || "產生驗證碼失敗", true);
+            })
+            .finally(function () {
+              btnLineLogin.disabled = false;
+            });
+        }
+
+        function runWithLiff() {
+          if (!state.liffId || !window.liff) {
+            cardSection.style.display = "block";
+            setStatus("尚未設定 LIFF。可先填既有卡號，或請店家完成 LINE LIFF 設定。", true);
+            btnLineLogin.textContent = "取得驗證碼";
+            btnLineLogin.onclick = function () {
+              var card = normalizeCard(memberCardInput.value || qs("card"));
+              if (card.length !== 13) {
+                setStatus("請先輸入 13 碼會員卡號（或請店家設定 LIFF）", true);
+                return;
+              }
+              requestOtp("", "");
+            };
+            return;
+          }
+
+          setStatus("正在初始化 LINE 登入…");
+          liff
+            .init({ liffId: state.liffId })
+            .then(function () {
+              state.liffReady = true;
+              cardSection.style.display = "block";
+              if (!liff.isLoggedIn()) {
+                setSteps(1);
+                setStatus("請點下方按鈕以 LINE 登入。");
+                btnLineLogin.onclick = function () {
+                  liff.login({ redirectUri: window.location.href });
+                };
+                return;
+              }
+              setStatus("LINE 已登入，可取得驗證碼。");
+              btnLineLogin.textContent = "取得／重新產生驗證碼";
+              btnLineLogin.onclick = function () {
+                var token = "";
+                try {
+                  token = liff.getAccessToken() || "";
+                } catch (e) {}
+                state.accessToken = token;
+                liff
+                  .getProfile()
+                  .then(function (p) {
+                    return requestOtp(token, (p && p.displayName) || "").then(function () {
+                      return refreshMemberStatus();
+                    });
+                  })
+                  .catch(function () {
+                    return requestOtp(token, "").then(function () {
+                      return refreshMemberStatus();
+                    });
+                  });
+              };
+              refreshMemberStatus().then(function () {
+                if (!reviewPanel.classList.contains("show") && !donePanel.classList.contains("show")) {
+                  btnLineLogin.click();
+                }
+              });
+            })
+            .catch(function (err) {
+              cardSection.style.display = "block";
+              setStatus("LINE 登入初始化失敗：" + ((err && err.message) || err), true);
+              btnLineLogin.textContent = "以卡號取得驗證碼";
+              btnLineLogin.onclick = function () {
+                var card = normalizeCard(memberCardInput.value || qs("card"));
+                if (card.length !== 13) {
+                  setStatus("請輸入 13 碼會員卡號", true);
+                  return;
+                }
+                requestOtp("", "");
+              };
+            });
+        }
+
+        btnCopyOtp.addEventListener("click", copyOtp);
+        btnRefreshStatus.addEventListener("click", refreshMemberStatus);
+
+        var prefill = normalizeCard(qs("card"));
+        if (prefill) {
+          memberCardInput.value = prefill;
+          state.memberCardNo = prefill;
+        }
+
+        setSteps(1);
+        getJson("line_bind_config")
+          .then(function (cfg) {
+            state.liffId = String((cfg && cfg.liffId) || "").trim();
+            state.publicSiteUrl = String((cfg && cfg.publicSiteUrl) || "").trim();
+            brandName = String((cfg && cfg.brandName) || "MAARU").trim() || "MAARU";
+            projectName = String((cfg && cfg.projectName) || "MemberLinking").trim() || "MemberLinking";
+            if (brandTitle) brandTitle.textContent = projectName;
+            if (brandTag) brandTag.textContent = (brandName.split(/\s+/)[0] || "MAARU") + " · 會員綁定";
+            document.title = "會員綁定｜" + projectName;
+            if (state.publicSiteUrl) {
+              btnShop.href = state.publicSiteUrl.replace(/\/$/, "") + "/";
+            } else {
+              btnShop.href = "./";
+            }
+            runWithLiff();
+          })
+          .catch(function () {
+            cardSection.style.display = "block";
+            setStatus("無法讀取綁定設定，仍可輸入卡號取得驗證碼。", true);
+            btnLineLogin.textContent = "以卡號取得驗證碼";
+            btnLineLogin.onclick = function () {
+              var card = normalizeCard(memberCardInput.value || qs("card"));
+              if (card.length !== 13) {
+                setStatus("請輸入 13 碼會員卡號", true);
+                return;
+              }
+              requestOtp("", "");
+            };
+          });
+      })();
+    </script>
+  </body>
+</html>
