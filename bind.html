@@ -137,12 +137,19 @@
         font-weight: 700;
         letter-spacing: 0.08em;
         cursor: pointer;
-        transition: background 0.2s ease, transform 0.2s ease;
+        transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
       }
 
       .btn-line:hover {
         background: var(--line-deep);
         transform: translateY(-1px);
+      }
+
+      .btn-line:disabled,
+      .btn-line.is-disabled {
+        opacity: 0.55;
+        pointer-events: none;
+        transform: none;
       }
 
       .btn-shop {
@@ -222,16 +229,16 @@
       <div class="brand-kana" id="brandTag">メンバー申請</div>
       <div class="rule" aria-hidden="true"></div>
       <h1>會員申請</h1>
-      <p class="lead">
-        請開啟官方 LINE 完成會員申請，系統會連結您的 LINE 並進入審核。
+      <p class="lead" id="leadText">
+        點下方「申請會員」，開啟官方 LINE 後按下傳送，即可收到申請已送出。
       </p>
 
       <div class="actions">
-        <a id="btnOpenLine" class="btn-line" href="https://line.me/R/ti/p/">開啟官方 LINE</a>
+        <a id="btnApply" class="btn-line is-disabled" href="#" aria-disabled="true">申請會員</a>
         <a id="btnShop" class="btn-shop" href="./">返回商店</a>
       </div>
 
-      <p class="foot-note">核准通過後，會以官方 LINE 通知您。</p>
+      <p class="foot-note" id="footNote">開啟對話後請按一次傳送，官方帳號會回覆 Flex 確認卡。</p>
     </main>
 
     <script>
@@ -242,6 +249,9 @@
         var brandTitle = document.getElementById("brandTitle");
         var brandTag = document.getElementById("brandTag");
         var btnShop = document.getElementById("btnShop");
+        var btnApply = document.getElementById("btnApply");
+        var leadText = document.getElementById("leadText");
+        var footNote = document.getElementById("footNote");
 
         function getJson(action) {
           var url = API_URL + "?action=" + encodeURIComponent(action);
@@ -261,11 +271,30 @@
           });
         }
 
+        function setApplyUrl(url) {
+          if (!btnApply) return;
+          if (url && /^https:\/\//i.test(url)) {
+            btnApply.href = url;
+            btnApply.classList.remove("is-disabled");
+            btnApply.removeAttribute("aria-disabled");
+            return;
+          }
+          btnApply.href = "#";
+          btnApply.classList.add("is-disabled");
+          btnApply.setAttribute("aria-disabled", "true");
+          if (leadText) {
+            leadText.textContent = "目前無法開啟官方 LINE，請稍後再試或聯絡店家。";
+          }
+          if (footNote) {
+            footNote.textContent = "請確認 GAS 已部署，且官方帳號 Channel access token 已設定。";
+          }
+        }
+
         getJson("line_bind_config")
           .then(function (cfg) {
             var brandName = String((cfg && cfg.brandName) || "MAARU").trim() || "MAARU";
-            var projectName = String((cfg && cfg.projectName) || "MemberLinking").trim() || "MemberLinking";
             var publicSiteUrl = String((cfg && cfg.publicSiteUrl) || "").trim();
+            var applyMemberUrl = String((cfg && cfg.applyMemberUrl) || "").trim();
             var shortBrand = brandName.split(/\s+/)[0] || "MAARU";
             if (brandTitle) brandTitle.textContent = shortBrand;
             if (brandTag) brandTag.textContent = "メンバー申請";
@@ -273,10 +302,11 @@
             if (btnShop) {
               btnShop.href = publicSiteUrl ? publicSiteUrl.replace(/\/$/, "") + "/" : "./";
             }
-            // 保留 projectName 供除錯／擴充，不覆蓋品牌主視覺
-            void projectName;
+            setApplyUrl(applyMemberUrl);
           })
-          .catch(function () {});
+          .catch(function () {
+            setApplyUrl("");
+          });
       })();
     </script>
   </body>
