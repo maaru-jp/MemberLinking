@@ -255,17 +255,13 @@
       <h1>會員申請</h1>
       <p class="lead" id="leadText">
         🎉 歡迎加入 MAARU SHOP 會員！<br /><br />
-        請填寫客戶姓名（社群名稱）與取貨門市後送出，開啟官方 LINE 完成申請。
+        請填寫社群名稱後送出，開啟官方 LINE 完成申請。
       </p>
 
       <form class="apply-form" id="applyForm" novalidate>
         <div class="field">
-          <label for="communityName">客戶姓名（社群名稱）</label>
-          <input id="communityName" name="communityName" type="text" maxlength="40" autocomplete="name" placeholder="請輸入客戶姓名／社群名稱" required />
-        </div>
-        <div class="field">
-          <label for="pickupStore">取貨門市</label>
-          <input id="pickupStore" name="pickupStore" type="text" maxlength="60" placeholder="請輸入常用取貨門市" required />
+          <label for="communityName">社群名稱</label>
+          <input id="communityName" name="communityName" type="text" maxlength="40" autocomplete="nickname" placeholder="請輸入社群名稱" required />
         </div>
         <p class="form-error" id="formError" role="alert"></p>
         <div class="actions">
@@ -285,7 +281,6 @@
         var btnShop = document.getElementById("btnShop");
         var applyForm = document.getElementById("applyForm");
         var communityNameEl = document.getElementById("communityName");
-        var pickupStoreEl = document.getElementById("pickupStore");
         var formError = document.getElementById("formError");
         var btnSubmit = document.getElementById("btnSubmit");
         var leadText = document.getElementById("leadText");
@@ -320,14 +315,14 @@
           formError.classList.add("show");
         }
 
-        function buildApplyText(name, store) {
-          return "申請會員\n客戶姓名：" + name + "\n取貨門市：" + store;
+        function buildApplyText(name) {
+          return "申請會員\n社群名稱：" + name;
         }
 
-        function buildApplyUrl(name, store) {
+        function buildApplyUrl(name) {
           if (!lineBasicId) return "";
           var basicId = lineBasicId.charAt(0) === "@" ? lineBasicId : "@" + lineBasicId.replace(/^@+/, "");
-          return "https://line.me/R/oaMessage/" + basicId + "/?text=" + encodeURIComponent(buildApplyText(name, store));
+          return "https://line.me/R/oaMessage/" + basicId + "/?text=" + encodeURIComponent(buildApplyText(name));
         }
 
         if (applyForm) {
@@ -335,18 +330,12 @@
             e.preventDefault();
             showError("");
             var name = String((communityNameEl && communityNameEl.value) || "").trim();
-            var store = String((pickupStoreEl && pickupStoreEl.value) || "").trim();
             if (!name) {
-              showError("請填寫客戶姓名（社群名稱）");
+              showError("請填寫社群名稱");
               if (communityNameEl) communityNameEl.focus();
               return;
             }
-            if (!store) {
-              showError("請填寫取貨門市");
-              if (pickupStoreEl) pickupStoreEl.focus();
-              return;
-            }
-            var url = buildApplyUrl(name, store);
+            var url = buildApplyUrl(name);
             if (!url) {
               showError("目前無法開啟官方 LINE，請稍後再試或聯絡店家。");
               return;
